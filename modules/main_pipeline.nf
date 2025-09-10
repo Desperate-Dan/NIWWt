@@ -1,6 +1,6 @@
 process trimPrimers {
-    //container "${params.wf.illumina_container}@${params.wf.illumina_container_sha}"
-    publishDir "results/${sample_ID}/trimmed_reads_1", pattern: "*.trimmed.fq"
+    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    publishDir "results/${sample_ID}/trimmed_reads_1", pattern: "*_val_*.fq.gz"
 
     debug true
 
@@ -9,16 +9,16 @@ process trimPrimers {
     path primer_list
 
     output:
-    tuple val(sample_ID), path("*.trimmed.fq")
+    tuple val(sample_ID), path("*_val_*.fq.gz")
 
     script:
     """
-    bbduk.sh in=${sample_ID_files[0]} in2=${sample_ID_files[1]} out=${sample_ID_files[0]}.trimmed.fq out2=${sample_ID_files[1]}.trimmed.fq ref=${primer_list} ktrimtips=33 k=21 mink=5 hdist=1
+    trim_galore --paired ${sample_ID_files[0]} ${sample_ID_files[1]} --basename ${sample_ID}
     """
 }
 
 process mapReads {
-    container "${params.wf.illumina_container}@${params.wf.illumina_container_sha}"
+    conda '/home/dmmalone/miniconda3/envs/NIWWt'
     publishDir "results/${sample_ID}/mapped_reads_2", pattern: "*.sorted.bam"
     
     debug true
@@ -33,13 +33,13 @@ process mapReads {
     script:
     """
     bwa index ${ref_file}
-    bwa mem -k 33 ${ref_file} ${sample_ID_trimmed} | samtools sort -o ${sample_ID}.sorted.bam
+    bwa mem -k 33 ${ref_file} ${sample_ID_trimmed[0]} ${sample_ID_trimmed[1]} | samtools sort -o ${sample_ID}.sorted.bam
     """
     //Added the -k flag to prevent reads that happen to only map to the primer sites from mapping
 }
 
 process makeConsensus {
-    container "${params.wf.illumina_container}@${params.wf.illumina_container_sha}"
+    conda '/home/dmmalone/miniconda3/envs/NIWWt'
     publishDir "results/consensus_sequences", pattern: "*consensus.fa"
 
     debug true
