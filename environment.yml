@@ -1,0 +1,11 @@
+name: NIWWt
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - ivar
+  - trim-galore
+  - samtools
+  - bwa
+  - freyja
