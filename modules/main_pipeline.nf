@@ -1,4 +1,4 @@
-process trimPrimers {
+process trimAdaptors {
     conda '/home/dmmalone/miniconda3/envs/NIWWt'
     publishDir "results/${sample_ID}/trimmed_reads_1", pattern: "*_val_*.fq.gz"
 
@@ -36,6 +36,37 @@ process mapReads {
     bwa mem -k 33 ${ref_file} ${sample_ID_trimmed[0]} ${sample_ID_trimmed[1]} | samtools sort -o ${sample_ID}.sorted.bam
     """
     //Added the -k flag to prevent reads that happen to only map to the primer sites from mapping
+}
+
+process trimPrimers {
+    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    publishDir "results/${sample_ID}/trimmed_reads_3", pattern: "*.trimmed.sorted.bam"
+
+    debug true
+
+    input:
+    tuple val(sample_ID), path(sample_ID_mapped)
+    path primer_list
+
+    output:
+    tuple val(sample_ID), path("*.trimmed.sorted.bam")
+
+    script:
+    """
+    ivar trim -e -k -b ${primer_list} -p ${sample_ID}.trimmed -i ${sample_ID_mapped} 
+    samtools sort -o ${sample_ID}.trimmed.sorted.bam ${sample_ID}.trimmed.bam
+    """
+}
+
+process frejya {
+    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    publishDir "results/${sample_ID}/freyja_output_4", pattern: "*depth.txt"
+
+
+    script:
+    """
+    freyja variants ${sample_ID_trimmed} --variants ${sample_ID}.variants --depths ${sample_ID}.depths.tsv --ref [reference.fa]
+    """
 }
 
 process makeConsensus {
