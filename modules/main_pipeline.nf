@@ -58,14 +58,27 @@ process trimPrimers {
     """
 }
 
-process frejya {
+process frejyaVariants {
     conda '/home/dmmalone/miniconda3/envs/NIWWt'
-    publishDir "results/${sample_ID}/freyja_output_4", pattern: "*depth.txt"
+    publishDir "results/${sample_ID}/freyja_output_4", pattern: "*.depths.tsv"
+    publishDir "results/${sample_ID}/freyja_output_4", pattern: "*.variants.tsv"
+    publishDir "results/${sample_ID}/freyja_output_4", pattern: "*_demixing_result.tsv"
 
+    debug true
+
+    input:
+    tuple val(sample_ID), path(sample_ID_primertrimmed)
+    path ref_file
+
+    output:
+    tuple val(sample_ID), path("*.variants.tsv")
+    tuple val(sample_ID), path("*.depths.tsv")
+    tuple val(sample_ID), path("*_demixing_result.tsv")
 
     script:
     """
-    freyja variants ${sample_ID_trimmed} --variants ${sample_ID}.variants --depths ${sample_ID}.depths.tsv --ref [reference.fa]
+    freyja variants ${sample_ID_primertrimmed} --variants ${sample_ID}.variants --depths ${sample_ID}.depths.tsv --ref ${ref_file}
+    freyja demix --output ${sample_ID}_demixing_result.tsv ${sample_ID}.variants.tsv ${sample_ID}.depths.tsv
     """
 }
 
