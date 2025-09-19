@@ -78,7 +78,7 @@ process frejyaVariants {
     output:
     tuple val(sample_ID), path("*.variants.tsv")
     tuple val(sample_ID), path("*.depths.tsv")
-    tuple val(sample_ID), path("*_demixing_result.tsv")
+    path("*_demixing_result.tsv"), emit: demix
 
     script:
     """
@@ -98,9 +98,7 @@ process freyjaPlots {
     debug true
     
     input:
-    tuple val(sample_ID), path(variants)
-    tuple val(sample_ID), path(depths)
-    tuple val(sample_ID), path(demix)
+    path(demix)
     
     output:
     path("freyja_aggregate/aggregated_result.tsv")

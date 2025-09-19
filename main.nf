@@ -14,7 +14,8 @@ workflow illumina_wf {
     //Not quite so straightforward as they need to be ingested for the pipeline to work - for now just index immediately before.
     mapped_ch = mapReads(trimmed_ch, inRef_ch)
     primerTrimmed_ch = trimPrimers(mapped_ch, inPrimers_ch)
-    frejyaVariants(primerTrimmed_ch, inRef_ch) | freyjaPlots
+    frejyaVariants(primerTrimmed_ch, inRef_ch)
+    freyjaPlots(frejyaVariants.out.demix.collect())
     makeConsensus(mapped_ch)
 }
 
