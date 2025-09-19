@@ -40,7 +40,7 @@ process mapReads {
 
 process trimPrimers {
     conda '/home/dmmalone/miniconda3/envs/NIWWt'
-    publishDir "results/${sample_ID}/trimmed_reads_3", pattern: "*.trimmed.sorted.bam"
+    publishDir "results/${sample_ID}/primer_trimmed_reads_3", pattern: "*.trimmed.sorted.bam"
 
     debug true
 
@@ -58,10 +58,15 @@ process trimPrimers {
     """
 }
 
+//process bamQC {
+//    Should probably add something to choose if a bamfile will be brough forward
+//    Or maybe this should be a post-step on the consensus sequences?
+//}
+
 process frejyaVariants {
     conda '/home/dmmalone/miniconda3/envs/NIWWt'
-    publishDir "results/${sample_ID}/freyja_output_4", pattern: "*.depths.tsv"
     publishDir "results/${sample_ID}/freyja_output_4", pattern: "*.variants.tsv"
+    publishDir "results/${sample_ID}/freyja_output_4", pattern: "*.depths.tsv"
     publishDir "results/${sample_ID}/freyja_output_4", pattern: "*_demixing_result.tsv"
 
     debug true
@@ -79,6 +84,34 @@ process frejyaVariants {
     """
     freyja variants ${sample_ID_primertrimmed} --variants ${sample_ID}.variants --depths ${sample_ID}.depths.tsv --ref ${ref_file}
     freyja demix --output ${sample_ID}_demixing_result.tsv ${sample_ID}.variants.tsv ${sample_ID}.depths.tsv
+    """
+}
+
+process freyjaPlots {
+    //freyja aggregate - This takes a dir in, so need to adjust input accordingly - will probably just fudge this by 'collecting' output but not actually using it...
+    //New plan, will ingest all output files and symlink them to a new aggregate folder 
+    //freya plot
+    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    publishDir "results/", pattern: "freyja_aggregate/aggregated_result.tsv"
+    publishDir "results/", pattern: "freyja_aggregate/mix_plot.pdf"
+
+    debug true
+    
+    input:
+    tuple val(sample_ID), path(variants)
+    tuple val(sample_ID), path(depths)
+    tuple val(sample_ID), path(demix)
+    
+    output:
+    path("freyja_aggregate/aggregated_result.tsv")
+    path("freyja_aggregate/mix_plot.pdf")
+
+    script:
+    """
+    mkdir ./freyja_aggregate
+    ln ${demix} ./freyja_aggregate/
+    freyja aggregate --output ./freyja_aggregate/aggregated_result.tsv ./freyja_aggregate/
+    freyja plot --output ./freyja_aggregate/mix_plot.pdf ./freyja_aggregate/aggregated_result.tsv
     """
 }
 
