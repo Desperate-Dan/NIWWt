@@ -1,5 +1,5 @@
 # NIWWt
-Setting up the pipeline for SARS-CoV-2 WW analysis of NI samples.
+Setting up the pipeline for SARS-CoV-2 WW analysis of NI samples. Broadly it uses [TrimGalore](https://github.com/FelixKrueger/TrimGalore) for read trimming, [bwa mem](https://github.com/lh3/bwa) for mapping, [iVar](https://github.com/andersen-lab/ivar) for primer-trimming and [freyja](https://github.com/andersen-lab/Freyja) for SARS_CoV-2 variant demultiplexing.
 
 ## How to run
 Currently works assuming you already have [Nextflow](https://www.nextflow.io/docs/latest/install.html) installed. Next create the environment using the following command:
