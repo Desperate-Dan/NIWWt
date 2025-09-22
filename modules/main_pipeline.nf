@@ -1,5 +1,5 @@
 process trimAdaptors {
-    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    conda "${HOME}/miniconda3/envs/NIWWt"
     publishDir "results/${sample_ID}/trimmed_reads_1", pattern: "*_val_*.fq.gz"
 
     debug true
@@ -18,7 +18,7 @@ process trimAdaptors {
 }
 
 process mapReads {
-    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    conda "${HOME}/miniconda3/envs/NIWWt"
     publishDir "results/${sample_ID}/mapped_reads_2", pattern: "*.sorted.bam"
     
     debug true
@@ -39,7 +39,7 @@ process mapReads {
 }
 
 process trimPrimers {
-    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    conda "${HOME}/miniconda3/envs/NIWWt"
     publishDir "results/${sample_ID}/primer_trimmed_reads_3", pattern: "*.trimmed.sorted.bam"
 
     debug true
@@ -64,7 +64,7 @@ process trimPrimers {
 //}
 
 process frejyaVariants {
-    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    conda "${HOME}/miniconda3/envs/NIWWt"
     publishDir "results/${sample_ID}/freyja_output_4", pattern: "*.variants.tsv"
     publishDir "results/${sample_ID}/freyja_output_4", pattern: "*.depths.tsv"
     publishDir "results/${sample_ID}/freyja_output_4", pattern: "*_demixing_result.tsv"
@@ -91,7 +91,7 @@ process freyjaPlots {
     //freyja aggregate - This takes a dir in, so need to adjust input accordingly - will probably just fudge this by 'collecting' output but not actually using it...
     //New plan, will ingest all output files and symlink them to a new aggregate folder 
     //freya plot
-    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    conda "${HOME}/miniconda3/envs/NIWWt"
     publishDir "results/", pattern: "freyja_aggregate/aggregated_result.tsv"
     publishDir "results/", pattern: "freyja_aggregate/mix_plot.pdf"
 
@@ -114,7 +114,7 @@ process freyjaPlots {
 }
 
 process makeConsensus {
-    conda '/home/dmmalone/miniconda3/envs/NIWWt'
+    conda "${HOME}/miniconda3/envs/NIWWt"
     publishDir "results/consensus_sequences", pattern: "*consensus.fa"
 
     debug true
