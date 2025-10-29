@@ -12,6 +12,6 @@ The code itself assumes that your conda environments are located at ```${HOME}/m
 
 To run the tool itself you can run the below command:
 ```
-nextflow -profile conda /path/to/NIWWt/main.nf --fastq /path/to/fastq/directory/
+nextflow run -profile conda /path/to/NIWWt/main.nf --fastq /path/to/fastq/directory/
 ```
 The pipeline expects a directory of pairs of fastq files. There are default reference and primer bed files included in ```resources``` but you can use your own with the ```--ref /path/to/ref``` and ```--bedfile /path/to/bedfile``` flags.
