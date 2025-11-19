@@ -33,9 +33,10 @@ process mapReads {
     script:
     """
     bwa index ${ref_file}
-    bwa mem -k 33 ${ref_file} ${sample_ID_trimmed[0]} ${sample_ID_trimmed[1]} | samtools sort -o ${sample_ID}.sorted.bam
+    bwa mem -k 33 ${ref_file} ${sample_ID_trimmed[0]} ${sample_ID_trimmed[1]} | samtools view -bq 15 | samtools sort -o ${sample_ID}.sorted.bam
     """
-    //Added the -k flag to prevent reads that happen to only map to the primer sites from mapping
+    //Added the -k flag to prevent reads that happen to only map to the primer sites from mapping.
+    //Added samtools view -q to filter reads on mapping quality, this appears to deal with any primer dimer mapping in the negatives.
 }
 
 process trimPrimers {
@@ -59,8 +60,8 @@ process trimPrimers {
 }
 
 //process bamQC {
-//    Should probably add something to choose if a bamfile will be brough forward
-//    Or maybe this should be a post-step on the consensus sequences?
+//    Bams are filtered already on mapping quality
+//    Will add step to deal with depth thresholds; possibly using inverse maskara to select regions above X depth?
 //}
 
 process frejyaVariants {
@@ -129,4 +130,5 @@ process makeConsensus {
     """
     samtools mpileup -aa -A -d 0 -Q 0 ${sample_ID_mapped} | ivar consensus -t 0.75 -m 10 -p ${sample_ID}.consensus
     """
+    //Not minimum depth (-m) is set to 10, will change after team consultation.
 }
