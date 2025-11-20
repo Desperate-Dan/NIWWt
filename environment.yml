@@ -9,3 +9,7 @@ dependencies:
   - samtools
   - bwa
   - freyja
+  - pip
+  - pip:
+    - maskara==1.1.3
+    - Bio

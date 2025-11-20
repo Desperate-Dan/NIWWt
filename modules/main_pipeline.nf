@@ -19,21 +19,33 @@ process trimAdaptors {
 
 process mapReads {
     conda "${HOME}/miniconda3/envs/NIWWt"
-    publishDir "results/${sample_ID}/mapped_reads_2", pattern: "*.sorted.bam"
+    publishDir "results/${sample_ID}/mapped_reads_2", pattern: "*.bam"
+    publishDir "results/${sample_ID}/mapped_reads_2", pattern: "no_coverage.txt"
     
     debug true
 
     input:
     tuple val(sample_ID), path(sample_ID_trimmed)
     path ref_file
+    val depth
 
     output:
     tuple val(sample_ID), path("*.sorted.bam")
+    tuple val(sample_ID), path("*.clean.bam"), emit: clean_bam, optional: true
+    path("no_coverage.txt"), optional: true 
 
     script:
     """
     bwa index ${ref_file}
     bwa mem -k 33 ${ref_file} ${sample_ID_trimmed[0]} ${sample_ID_trimmed[1]} | samtools view -bq 15 | samtools sort -o ${sample_ID}.sorted.bam
+    samtools index ${sample_ID}.sorted.bam
+    maskara -i -d ${depth} ${sample_ID}.sorted.bam
+    if [ -f depth_mask.tsv ]; then
+        samtools view -b -M -o ${sample_ID}.clean.bam -L depth_mask.tsv ${sample_ID}.sorted.bam
+    else
+        echo -e "\033[0;33m${sample_ID} has no coverage after depth filtering\033[0m"
+        echo "${sample_ID}" >> no_coverage.txt
+    fi
     """
     //Added the -k flag to prevent reads that happen to only map to the primer sites from mapping.
     //Added samtools view -q to filter reads on mapping quality, this appears to deal with any primer dimer mapping in the negatives.
@@ -130,5 +142,5 @@ process makeConsensus {
     """
     samtools mpileup -aa -A -d 0 -Q 0 ${sample_ID_mapped} | ivar consensus -t 0.75 -m 10 -p ${sample_ID}.consensus
     """
-    //Not minimum depth (-m) is set to 10, will change after team consultation.
+    //Note minimum depth (-m) is set to 10, will change after team consultation.
 }
