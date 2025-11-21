@@ -28,6 +28,7 @@ process mapReads {
     tuple val(sample_ID), path(sample_ID_trimmed)
     path ref_file
     val depth
+    val mappingQ
 
     output:
     tuple val(sample_ID), path("*.sorted.bam")
@@ -37,7 +38,7 @@ process mapReads {
     script:
     """
     bwa index ${ref_file}
-    bwa mem -k 33 ${ref_file} ${sample_ID_trimmed[0]} ${sample_ID_trimmed[1]} | samtools view -bq 15 | samtools sort -o ${sample_ID}.sorted.bam
+    bwa mem -k 33 ${ref_file} ${sample_ID_trimmed[0]} ${sample_ID_trimmed[1]} | samtools view -bq ${mappingQ} | samtools sort -o ${sample_ID}.sorted.bam
     samtools index ${sample_ID}.sorted.bam
     maskara -i -d ${depth} ${sample_ID}.sorted.bam
     if [ -f depth_mask.tsv ]; then
@@ -48,7 +49,10 @@ process mapReads {
     fi
     """
     //Added the -k flag to prevent reads that happen to only map to the primer sites from mapping.
-    //Added samtools view -q to filter reads on mapping quality, this appears to deal with any primer dimer mapping in the negatives.
+    //Added samtools view -q (default: 15) to filter reads on mapping quality, this appears to deal with any primer dimer mapping in the negatives.
+    //I've modified Maskara to produce a bedfile of positions at or above a given depth threshold (default: 20).
+    //IF there are sites above the threshold, samtools view selects all reads that cover these regions and writes them to *.clean.bam.
+    //ELSE that sample is not brought forward and a no_coverage.txt file is made to highlight failing samples.
 }
 
 process trimPrimers {
@@ -70,11 +74,6 @@ process trimPrimers {
     samtools sort -o ${sample_ID}.trimmed.sorted.bam ${sample_ID}.trimmed.bam
     """
 }
-
-//process bamQC {
-//    Bams are filtered already on mapping quality
-//    Will add step to deal with depth thresholds; possibly using inverse maskara to select regions above X depth?
-//}
 
 process frejyaVariants {
     conda "${HOME}/miniconda3/envs/NIWWt"
@@ -134,13 +133,14 @@ process makeConsensus {
 
     input:
     tuple val(sample_ID), path(sample_ID_mapped)
+    val depth
 
     output:
     tuple val(sample_ID), path("*.consensus.fa")
 
     script:
     """
-    samtools mpileup -aa -A -d 0 -Q 0 ${sample_ID_mapped} | ivar consensus -t 0.75 -m 10 -p ${sample_ID}.consensus
+    samtools mpileup -aa -A -d 0 -Q 0 ${sample_ID_mapped} | ivar consensus -t 0.75 -m ${depth} -p ${sample_ID}.consensus
     """
-    //Note minimum depth (-m) is set to 10, will change after team consultation.
+    //Consensus Depth (-m) is set to be the same as the depth for the bam file selection.
 }
